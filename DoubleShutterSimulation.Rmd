@@ -13,5 +13,37 @@ checkTotalExists <- function(tiles, total){
   }
   return(existsBin)
 }
+
+checkTotalExists(c(1,2,3,4), 11)
+```
+
+```{r}
+## Rolls two dice; if tile total is less than 7, rolls one dice
+rollDice <- function(tiles){
+  if(sum(tiles) <= 6) return(sample(1:6, 1))
+  else{
+    return(sum(sample(1:6, 1), sample(1:6, 1)))
+  }
+}
+
+## checking distribution
+total <- c
+for(i in 1:5000) total[i] <- rollDice(tiles)
+hist(total, breaks = 15)
+```
+
+```{r}
+playGame <- function(){
+  frontRow <- c(1:9)
+  backRow <- c()
+  if(checkTotalExists(tiles, total)){
+    
+  }
+  else{
+    ## game over, score is total of remaining tiles (front row is doubled)
+    return(sum(backRow, (2*frontRow)))
+  }
+}
+
 ```
 
