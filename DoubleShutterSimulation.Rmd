@@ -4,6 +4,14 @@ output: html_document
 ---
 
 ```{r}
-
+## This checks if the total die roll exists in any combiantion of the existing tiles. 
+checkTotalExists <- function(tiles, total){
+  existsBin <- FALSE
+  for(i in 1:length(tiles)){
+    tileSums <- colSums(combn(tiles, i))
+    if(total %in% tileSums) existsBin <- TRUE
+  }
+  return(existsBin)
+}
 ```
 
