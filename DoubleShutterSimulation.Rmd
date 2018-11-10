@@ -7,12 +7,14 @@ output: html_document
 ## This checks if the total die roll exists in any combiantion of the existing tiles. 
 checkTotalExists <- function(tiles, total){
   existsBin <- FALSE
-  for(i in 1:length(tiles)){
-    if(i == length(tiles)) tileSums <- sum(tiles)
-    else tileSums <- colSums(combn(tiles, i))
-    
-    if(total %in% tileSums) existsBin <- TRUE
-  }
+  # for(i in 1:length(tiles)){
+  #   if(i == length(tiles)) tileSums <- sum(tiles)
+  #   else tileSums <- colSums(combn(tiles, i))
+  #   
+  #   if(total %in% tileSums) existsBin <- TRUE
+  # }
+  combos <- makeCombos(tiles, total)
+  if(length(combos) > 0) existsBin <- T
   return(existsBin)
 }
 
@@ -35,7 +37,6 @@ hist(total, breaks = 15)
 ```
 
 ```{r makeCombos}
-
 makeCombos <- function(tiles, total){
     y = NULL
     for (m in 1:(length(tiles)-1)){
@@ -45,7 +46,8 @@ makeCombos <- function(tiles, total){
             for (j in 1:length(ind))
                 y = c(y, list(tmp[,ind[j]]))
             }
-        }
+    }
+    if(sum(tiles) == total) y = c(y, list(tiles))
     return(unique(lapply(y, sort)))
   }
 
@@ -99,7 +101,7 @@ largestTile <- function(tiles, total){
         winningComboIndex <- i
         next
       }
-      ## if they're even, just leave it
+     ## if they're even, just leave it
     }
   }
 
@@ -160,6 +162,15 @@ playGame <- function(){
 
   ## game over, score is total of remaining tiles (front row is doubled)
   return(sum(backRow, (2*frontRow)))
+}
+
+```
+
+```{r simluating games}
+## 10,000 simluations of largestTile strategy
+totals <- c()
+for(i in 1:10000){
+  totals <- c(totals, playGame())
 }
 
 ```
