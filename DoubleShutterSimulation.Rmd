@@ -13,12 +13,11 @@ checkTotalExists <- function(tiles, total){
   #   
   #   if(total %in% tileSums) existsBin <- TRUE
   # }
-  combos <- makeCombos(tiles, total)
-  if(length(combos) > 0) existsBin <- T
+  if(length(makeCombos(tiles, total)) > 0) existsBin <- T
   return(existsBin)
 }
 
-checkTotalExists(c(1,2,3,4), 10)
+checkTotalExists(c(5,6,7), 5)
 ```
 
 ```{r rollDice}
@@ -39,15 +38,22 @@ hist(total, breaks = 15)
 ```{r makeCombos}
 makeCombos <- function(tiles, total){
     y = NULL
-    for (m in 1:(length(tiles)-1)){
+    ## if single element
+    if(length(tiles) == 1){
+      if(tiles == total) y = c(y, list(tiles))
+    }
+    else if(length(tiles) == 1){
+        for(m in 1:(length(tiles)-1)){
         tmp = combn(tiles, m)
         ind = which(colSums(tmp) == total)
         if (length(ind) > 0){
             for (j in 1:length(ind))
                 y = c(y, list(tmp[,ind[j]]))
             }
+        }
+      if(sum(tiles) == total) y = c(y, list(tiles))
     }
-    if(sum(tiles) == total) y = c(y, list(tiles))
+
     return(unique(lapply(y, sort)))
   }
 
@@ -158,6 +164,9 @@ playGame <- function(){
     
     ## re-roll to start next turn
     total <- rollDice(c(frontRow, backRow))
+    
+    ## check win condition
+    if(length(frontRow) == 0 & length(backRow) == 0) break
   }
 
   ## game over, score is total of remaining tiles (front row is doubled)
