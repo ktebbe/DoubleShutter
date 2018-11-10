@@ -63,7 +63,6 @@ makeCombos <- function(tiles, total){
 ## Strategy #1 - pick largest tile(s)
 largestTile <- function(tiles, total){
   tilesToShut <- c()
-  orderedTiles <- order(-tiles)
   
   ## if total is one of the tiles, use that
   if(total %in% tiles){
@@ -122,6 +121,51 @@ largestTile <- function(tiles, total){
 largestTile(c(1,1,4,5,2,6), 7) ## looks good
 ```
 
+```{r mostTiles}
+
+mostTiles <- function(tiles, total){
+  tilesToShut <- c()
+  
+  ## if total is sum of all tiles, use all
+  if(total == sum(tiles)){
+    tilesToShut <- tiles
+    return(tilesToShut)
+  }
+  
+  ## else look at all combos
+  combos <- makeCombos(tiles, total)
+  
+  ## if just one combo, return that
+  if(length(combos) == 1){
+    tilesToShut <- unlist(combos)
+    return(tilesToShut)
+  }
+  else{ ## loop through and find combo with most tiles
+    winningComboIndex <- 1
+    winningLength <- length(combos[[1]])
+    for(i in 2:length(combos)){
+      currentLength <- length(combos[[i]])
+      if(currentLength < winningLength) next
+      ## if current is bigger, swap to be winning
+      if(currentLength > winningLength){
+        winningLength <- currentLength
+        winningComboIndex <- i
+        next
+      }
+      ## if same length, just leave it
+    }
+    ## subset winning combo with winningComboIndex
+    tilesToShut <- combos[[winningComboIndex]]
+    return(tilesToShut)
+    
+  }
+}
+
+mostTiles(c(1,1,2,3,4), 4)
+
+```
+
+
 ```{r shutTiles}
 
 shutTiles <- function(tilesToShut, frontRow, backRow){
@@ -150,21 +194,20 @@ shutTiles <- function(tilesToShut, frontRow, backRow){
 
 
 ```{r playGame}
-playGame <- function(){
+playGame <- function(strategy){
   frontRow <- c(1:9)
   backRow <- c()
   total <- rollDice(c(frontRow, backRow))
   while(checkTotalExists(c(frontRow, backRow), total)){
     
     ## strategy to determine which tiles to shut
-    tilesToShut <- largestTile(c(frontRow, backRow), total)
+    if(strategy == "largest") tilesToShut <- largestTile(c(frontRow, backRow), total)
+    if(strategy == "most") tilesToShut <- mostTiles(c(frontRow, backRow), total)
     
     ## shutting the chosen tiles, ensuring front tiles reveal correct back tiles
     returned <- shutTiles(tilesToShut, frontRow, backRow)
     frontRow <- returned$frontRow
     backRow <- returned$backRow
-    
-    cat("front: ", frontRow, "back:", backRow, "total:", total,  "\n")
     
     ## re-roll to start next turn
     total <- rollDice(c(frontRow, backRow))
@@ -172,7 +215,7 @@ playGame <- function(){
     ## check win condition
     if(length(frontRow) == 0 & length(backRow) == 0) break
   }
-  #cat("front: ", frontRow, "back:", backRow, "total:", total,  "\n")
+  ##cat("front: ", frontRow, "back:", backRow, "total:", total,  "\n")
   ## game over, score is total of remaining tiles (front row is doubled)
   return(sum(backRow, (2*frontRow)))
 }
@@ -182,10 +225,15 @@ playGame <- function(){
 ```{r simluating games}
 ## 10,000 simluations of largestTile strategy
 totals <- c()
-for(i in 1:10000){
-  cat("game ", i, "\n")
-  totals <- c(totals, playGame())
+for(i in 1:1000){
+  totals <- c(totals, playGame("largest"))
 }
+
+largestTotals <- totals
+mostTotals <- totals
+
+summary(largestTotals)
+summary(mostTotals)
 
 ```
 
