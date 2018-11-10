@@ -34,6 +34,23 @@ for(i in 1:5000) total[i] <- rollDice(tiles)
 hist(total, breaks = 15)
 ```
 
+```{r makeCombos}
+
+makeCombos <- function(tiles, total){
+    y = NULL
+    for (m in 1:(length(tiles)-1)){
+        tmp = combn(tiles, m)
+        ind = which(colSums(tmp) == total)
+        if (length(ind) > 0){
+            for (j in 1:length(ind))
+                y = c(y, list(tmp[,ind[j]]))
+            }
+        }
+    return(unique(lapply(y, sort)))
+  }
+
+```
+
 ```{r largestTile}
 ## Strategy #1 - pick largest tile(s)
 largestTile <- function(tiles, total){
@@ -52,19 +69,6 @@ largestTile <- function(tiles, total){
   }
   
   ## else, look at list all combos of tiles that equal the total
-  makeCombos <- function(tiles, total){
-    y = NULL
-    for (m in 1:(length(tiles)-1)){
-        tmp = combn(tiles, m)
-        ind = which(colSums(tmp) == total)
-        if (length(ind) > 0){
-            for (j in 1:length(ind))
-                y = c(y, list(tmp[,ind[j]]))
-            }
-        }
-    return(unique(lapply(y, sort)))
-  }
-  
   ## make all combos
   combos <- makeCombos(tiles, total)
   
@@ -105,11 +109,37 @@ largestTile <- function(tiles, total){
   return(tilesToShut)
 }
 
-largestTile(c(1,1,4,5,2,6), 7)
+largestTile(c(1,1,4,5,2,6), 7) ## looks good
+```
+
+```{r shutTiles}
+
+shutTiles <- function(tilesToShut, frontRow, backRow){
+  ## always shut front row first!
+  
+  ## loop through tilesToShut
+  for(i in 1:length(tilesToShut)){
+    ## remove from front row first, if possible
+    if(tilesToShut[i] %in% frontRow){ 
+      ## remove from front row
+      frontRow <- frontRow[frontRow != tilesToShut[i]]
+      
+      ## add newly revealed backRow tiles - always add to 10
+      backRow <- c(backRow, 10 - tilesToShut[i])
+    }
+    ## else remove from back row
+    else{
+      ## remove from back row
+      backRow <- backRow[backRow != tilesToShut[i]]
+    }
+  }
+  return(list("frontRow" = frontRow, "backRow" = backRow))
+}
+
 ```
 
 
-```{r}
+```{r playGame}
 playGame <- function(){
   frontRow <- c(1:9)
   backRow <- c()
@@ -117,8 +147,12 @@ playGame <- function(){
   while(checkTotalExists(c(frontRow, backRow), total)){
     
     ## strategy to determine which tiles to shut
+    tilesToShut <- largestTile(c(frontRow, backRow), total)
     
     ## shutting the chosen tiles, ensuring front tiles reveal correct back tiles
+    returned <- shutTiles(tilesToShut, frontRow, backRow)
+    frontRow <- returned$frontRow
+    backRow <- returned$backRow
     
     ## re-roll to start next turn
     total <- rollDice(c(frontRow, backRow))
