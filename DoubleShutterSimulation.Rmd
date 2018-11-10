@@ -17,7 +17,7 @@ checkTotalExists <- function(tiles, total){
   return(existsBin)
 }
 
-checkTotalExists(c(5,6,7), 5)
+checkTotalExists(c(1), 5)
 ```
 
 ```{r rollDice}
@@ -42,7 +42,7 @@ makeCombos <- function(tiles, total){
     if(length(tiles) == 1){
       if(tiles == total) y = c(y, list(tiles))
     }
-    else if(length(tiles) == 1){
+    else if(length(tiles) > 1){
         for(m in 1:(length(tiles)-1)){
         tmp = combn(tiles, m)
         ind = which(colSums(tmp) == total)
@@ -98,9 +98,11 @@ largestTile <- function(tiles, total){
       winningComboIndex <- i
       next
     }
-    if(currentMax == winningMax){ ## need to check next highest
-      currentCombo <- combos[[i]][combos[[i]] != currentMax]
-      winningCombo <- combos[[winningComboIndex]][combos[[winningComboIndex]] != winningMax]
+    if(currentMax == winningMax){ ## need to check next highest, remove ONE OF highest
+      currentCombo <- combos[[i]]
+      currentCombo <- currentCombo[-which(currentCombo == currentMax)[1]]
+      winningCombo <- combos[[winningComboIndex]]
+      winningCombo <- winningCombo[-which(winningCombo == currentMax)[1]]
       ## check next highest in set
       if(max(currentCombo) > max(winningCombo)){
         winningMax <- currentMax
@@ -137,7 +139,7 @@ shutTiles <- function(tilesToShut, frontRow, backRow){
     }
     ## else remove from back row
     else{
-      ## remove from back row
+     ## remove from back row
       backRow <- backRow[backRow != tilesToShut[i]]
     }
   }
@@ -162,13 +164,15 @@ playGame <- function(){
     frontRow <- returned$frontRow
     backRow <- returned$backRow
     
+    cat("front: ", frontRow, "back:", backRow, "total:", total,  "\n")
+    
     ## re-roll to start next turn
     total <- rollDice(c(frontRow, backRow))
     
     ## check win condition
     if(length(frontRow) == 0 & length(backRow) == 0) break
   }
-
+  #cat("front: ", frontRow, "back:", backRow, "total:", total,  "\n")
   ## game over, score is total of remaining tiles (front row is doubled)
   return(sum(backRow, (2*frontRow)))
 }
@@ -179,6 +183,7 @@ playGame <- function(){
 ## 10,000 simluations of largestTile strategy
 totals <- c()
 for(i in 1:10000){
+  cat("game ", i, "\n")
   totals <- c(totals, playGame())
 }
 
