@@ -3,21 +3,23 @@ title: "Double Shutter Simluation"
 output: html_document
 ---
 
-```{r}
+```{r checkTotalExists}
 ## This checks if the total die roll exists in any combiantion of the existing tiles. 
 checkTotalExists <- function(tiles, total){
   existsBin <- FALSE
   for(i in 1:length(tiles)){
-    tileSums <- colSums(combn(tiles, i))
+    if(i == length(tiles)) tileSums <- sum(tiles)
+    else tileSums <- colSums(combn(tiles, i))
+    
     if(total %in% tileSums) existsBin <- TRUE
   }
   return(existsBin)
 }
 
-checkTotalExists(c(1,2,3,4), 11)
+checkTotalExists(c(1,2,3,4), 10)
 ```
 
-```{r}
+```{r rollDice}
 ## Rolls two dice; if tile total is less than 7, rolls one dice
 rollDice <- function(tiles){
   if(sum(tiles) <= 6) return(sample(1:6, 1))
@@ -27,22 +29,103 @@ rollDice <- function(tiles){
 }
 
 ## checking distribution
-total <- c
+total <- c()
 for(i in 1:5000) total[i] <- rollDice(tiles)
 hist(total, breaks = 15)
 ```
+
+```{r largestTile}
+## Strategy #1 - pick largest tile(s)
+largestTile <- function(tiles, total){
+  tilesToShut <- c()
+  orderedTiles <- order(-tiles)
+  
+  ## if total is one of the tiles, use that
+  if(total %in% tiles){
+    tilesToShut <- total
+    return(tilesToShut)
+  }
+  ## if total is sum of all tiles, use all
+   if(total == sum(tiles)){
+    tilesToShut <- tiles
+    return(tilesToShut)
+  }
+  
+  ## else, look at list all combos of tiles that equal the total
+  makeCombos <- function(tiles, total){
+    y = NULL
+    for (m in 1:(length(tiles)-1)){
+        tmp = combn(tiles, m)
+        ind = which(colSums(tmp) == total)
+        if (length(ind) > 0){
+            for (j in 1:length(ind))
+                y = c(y, list(tmp[,ind[j]]))
+            }
+        }
+    return(unique(lapply(y, sort)))
+  }
+  
+  ## make all combos
+  combos <- makeCombos(tiles, total)
+  
+  ## if just one combo, return that
+  if(length(combos) == 1){
+     tilesToShut <- unlist(combos)
+    return(tilesToShut)
+  }
+  
+  ## loop through all combos, find one with largest element(s)
+  winningComboIndex <- 1
+  winningMax <- max(combos[[1]])
+  for(i in 2:length(combos)){
+    currentMax <- max(combos[[i]])
+    if(currentMax < winningMax) next
+    ## if current is bigger, swap to be winning
+    if(currentMax > winningMax){
+      winningMax <- currentMax
+      winningComboIndex <- i
+      next
+    }
+    if(currentMax == winningMax){ ## need to check next highest
+      currentCombo <- combos[[i]][combos[[i]] != currentMax]
+      winningCombo <- combos[[winningComboIndex]][combos[[winningComboIndex]] != winningMax]
+      ## check next highest in set
+      if(max(currentCombo) > max(winningCombo)){
+        winningMax <- currentMax
+        winningComboIndex <- i
+        next
+      }
+      ## if they're even, just leave it
+    }
+  }
+
+  ## subset winning combo with winningComboIndex
+  tilesToShut <- combos[[winningComboIndex]]
+ 
+  return(tilesToShut)
+}
+
+largestTile(c(1,1,4,5,2,6), 7)
+```
+
 
 ```{r}
 playGame <- function(){
   frontRow <- c(1:9)
   backRow <- c()
-  if(checkTotalExists(tiles, total)){
+  total <- rollDice(c(frontRow, backRow))
+  while(checkTotalExists(c(frontRow, backRow), total)){
     
+    ## strategy to determine which tiles to shut
+    
+    ## shutting the chosen tiles, ensuring front tiles reveal correct back tiles
+    
+    ## re-roll to start next turn
+    total <- rollDice(c(frontRow, backRow))
   }
-  else{
-    ## game over, score is total of remaining tiles (front row is doubled)
-    return(sum(backRow, (2*frontRow)))
-  }
+
+  ## game over, score is total of remaining tiles (front row is doubled)
+  return(sum(backRow, (2*frontRow)))
 }
 
 ```
