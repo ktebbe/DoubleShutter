@@ -122,7 +122,6 @@ largestTile(c(1,1,4,5,2,6), 7) ## looks good
 ```
 
 ```{r mostTiles}
-
 mostTiles <- function(tiles, total){
   tilesToShut <- c()
   
@@ -164,6 +163,7 @@ mostTiles <- function(tiles, total){
 mostTiles(c(1,1,2,3,4), 4)
 
 ```
+
 
 
 ```{r shutTiles}
